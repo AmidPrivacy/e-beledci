@@ -15,11 +15,21 @@ app.use(express.static("public"));
 
 // console.log(users);
 var connection = mysql.createConnection({
-    "host": "localhost",
-    "user": "root",
-    "password": "",
-    "database": "e_beledci"
+    "host": "192.185.226.100",
+    "user": "yenikrpi_beledci",
+    "password": "mo-Ouj=QwkF}",
+    "database": "yenikrpi_beledci"
 });
+
+
+// var connection = mysql.createConnection({
+//     "host": "localhost",
+//     "user": "root",
+//     "password": "",
+//     "database": "e_beledci"
+// });
+
+
 
 var users = null;
 
