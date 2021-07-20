@@ -34,11 +34,18 @@ var connection = mysql.createConnection({
 var users = null;
 
 connection.connect(function(error){
-    console.log(error);
+    if(error){
+        console.log('error when connecting to db:', err);
+    }
+    
+    // console.log(error);
  
 });
 connection.query("SELECT * FROM users", function (err, result, fields) {
-    if (err) throw err;
+    if (err){
+        console.log("user select error")
+        throw err;
+    } 
     users = result;
 });
  
@@ -59,6 +66,9 @@ app.post("/get-messages", function(request, result) {
 
 
 io.on("connection", (socket)=> {
+
+    console.log(socket.id);
+    
     var userId = 0;
     socket.on("user", id=>{
         userId = id;
