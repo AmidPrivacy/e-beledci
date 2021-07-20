@@ -1,4 +1,4 @@
-const socket = io.connect("wss://165.232.181.70:3000");
+const socket = io.connect("ws://165.232.181.70:3000");
 
 const sender = document.getElementById("sender");
 const message = document.getElementById("message");
