@@ -1,0 +1,106 @@
+const express = require("express");
+const socket = require("socket.io");
+var mysql = require("mysql");
+const app = express();
+const server = app.listen(3000);
+const io = socket(server);
+var bodyParser = require("body-parser");
+
+
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(express.static("public"));
+
+
+
+// console.log(users);
+var connection = mysql.createConnection({
+    "host": "localhost",
+    "user": "root",
+    "password": "",
+    "database": "e_beledci"
+});
+
+var users = null;
+
+connection.connect(function(error){
+    console.log(error);
+ 
+});
+connection.query("SELECT * FROM users", function (err, result, fields) {
+    if (err) throw err;
+    users = result;
+});
+ 
+
+ 
+
+app.use(function(request, result, next){
+    result.setHeader("Access-Control-Allow-Origin", "*");
+    next();
+})
+
+app.post("/get-messages", function(request, result) {
+    connection.query("select * from chat where (sender_id="+request.body.sender+" and receiver_id="+request.body.receiver+") or " 
+    +"(sender_id="+request.body.receiver+" and receiver_id="+request.body.sender+")", function(error, message){
+        result.end(JSON.stringify(message))
+    });
+})
+
+
+io.on("connection", (socket)=> {
+    var userId = 0;
+    socket.on("user", id=>{
+        userId = id;
+        let activeUsers = [];
+
+        users.forEach(user => {
+            if(user.id==id){
+                user.chat_id = socket.id;
+                socket.broadcast.emit("connected", user.id);
+            }
+
+            if(user.chat_id != null) {
+                activeUsers.push(user.id);
+            }
+        }); 
+        io.to(socket.id).emit("active-users", activeUsers); 
+    })
+
+    socket.on("chat", data=> { 
+        users.forEach(user => { 
+            if(user.id==data.id){
+                data.sender = user.name;  
+                data.senderId = userId;
+                io.to(user.chat_id).emit("chat", data);
+                connection.query("insert into chat (sender_id, receiver_id, message, chat_id, status) values("+userId+", "+user.id+", '"+data.message+"', '"+socket.id+"', "+(user.chat_id !==null ? 1: 0) +" )")
+            }
+        })
+ 
+    });
+     
+
+    socket.on("typing", data => {
+     
+        users.forEach(user => { 
+            if(user.id==data.id){
+                io.to(user.chat_id).emit("typing", data.type);
+            }
+        }) 
+        
+    })
+
+    socket.on('disconnect', data => { 
+        users.forEach((user, index )=>{
+            if(socket.id == user.chat_id) {
+                user.chat_id = null;
+                socket.broadcast.emit("disconnected", user.id)
+            } 
+        }) 
+    });
+
+
+
+})
+
+
