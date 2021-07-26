@@ -69,7 +69,7 @@ app.post("/get-messages", function(request, result) {
 
 
 io.on("connection", (socket)=> {
-
+console.log("pp--------pp");
     console.log(socket.id);
     
     var userId = 0;
@@ -100,7 +100,7 @@ console.log(data);
    users.forEach(user => { 
             if(user.id==data.id){
                 data.sender = user.name;  
-                data.senderId = (userId==0)? data.senderId : userId;
+                data.senderId;
                 io.to(user.chat_id).emit("chat", data);
                 connection.query("insert into chat (sender_id, receiver_id, message, chat_id, status) values("+userId+", "+user.id+", '"+data.message+"', '"+socket.id+"', "+(user.chat_id !==null ? 1: 0) +" )")
             }
@@ -122,7 +122,6 @@ console.log(data);
     socket.on('disconnect', data => { 
         users.forEach((user, index )=>{
             if(socket.id == user.chat_id) {
-		io.to(user.chat_id).emit("reconnect", user.id);
                 user.chat_id = null;
                 socket.broadcast.emit("disconnected", user.id)
             } 
